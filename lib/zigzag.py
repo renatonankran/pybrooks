@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 
 def zig_zag(data, depth):
@@ -62,3 +61,12 @@ def zig_zag(data, depth):
                             break
 
     return zz, lows, highs
+
+
+def zz_direction(row):
+    if row['zz'] != np.nan:
+        if row["zz"] == row["highs"]:
+            return -1
+        else:
+            return 1
+    return 0
