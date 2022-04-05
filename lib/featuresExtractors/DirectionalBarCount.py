@@ -1,3 +1,6 @@
+
+import numpy as np
+from .. import zigzag as zz
 import Base
 from .. import bars
 
