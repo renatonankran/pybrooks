@@ -42,3 +42,17 @@ def inside_bar(outside, inside, inside_body=False):
             if outside['high'] >= inside['open'] and outside['low'] <= inside['close']:
                 return True
     return False
+
+
+def gap(bar1, bar2):
+    mean1 = (bar1["high"]+bar1["low"])/2
+    mean2 = (bar2["high"]+bar2["low"])/2
+
+    if mean1 <= mean2:
+        if bar1["high"] < bar2["low"]:
+            return True
+    else:
+        if bar1["low"] > bar2["high"]:
+            return True
+
+    return False

@@ -7,6 +7,11 @@ def zig_zag(data, depth):
     lows = np.full(data.shape[0], np.nan)
     last_high = data.iloc[0]['high']
     last_low = data.iloc[0]['low']
+    last_high_idx = 0
+    last_low_idx = 0
+    start = np.full(data.shape[0], np.nan)
+    leg_up = False
+    leg_down = False
 
     for idx, _ in data.iterrows():
         if idx < depth:
@@ -16,9 +21,23 @@ def zig_zag(data, depth):
         if max == data.iloc[idx-1]['high'] and last_high != max:
             highs[idx-1] = max
             last_high = max
+            last_high_idx = idx-1
         if min == data.iloc[idx-1]['low'] and min != last_low:
             lows[idx-1] = min
             last_low = min
+            last_low_idx = idx-1
+
+        if last_high_idx != 0 and last_low_idx != 0:
+            if not leg_up and last_high_idx < last_low_idx:
+                start[idx-1] = lows[idx-1]
+                last_high_idx = 0
+                leg_up = True
+                leg_down = False
+            if not leg_down and last_low_idx < last_high_idx:
+                start[idx-1] = highs[idx-1]
+                last_low_idx = 0
+                leg_up = False
+                leg_down = True
 
         for b in range(2, backstep+1):
             if not np.isnan(lows[idx-1]) and not np.isnan(lows[idx-b]) and lows[idx-b] > lows[idx-1]:
@@ -40,9 +59,11 @@ def zig_zag(data, depth):
                     if zz[last] == highs[last]:
                         if zz[last] >= zz[idx]:
                             zz[idx] = np.nan
+                            start[idx] = np.nan
                             break
                         else:
                             zz[last] = np.nan
+                            start[idx] = np.nan
                             break
 
         if not np.isnan(lows[idx]):
@@ -55,12 +76,14 @@ def zig_zag(data, depth):
                     if zz[last] == lows[last]:
                         if zz[last] <= zz[idx]:
                             zz[idx] = np.nan
+                            start[idx] = np.nan
                             break
                         else:
                             zz[last] = np.nan
+                            start[idx] = np.nan
                             break
 
-    return zz, lows, highs
+    return zz, lows, highs, start
 
 
 def zz_direction(row):

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import bars
-from zigzag import zz_direction
+from . import bars
+from .zigzag import zz_direction
 
 
 class AbstractLegs():
