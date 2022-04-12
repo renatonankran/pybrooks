@@ -55,61 +55,30 @@ class TrendDirection():
         if self.c_zz == zz:
             return self._direction
 
-        if not self.rev_started:
-            if self._direction >= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['highs']:
-                for idx_zz in range(idx, idx-5, -2):
-                    if self.compact.iloc[idx_zz]['zz'] < self.compact.iloc[idx_zz-2]['zz']:
-                        self.count += 1
-                tmp = self.count
-                self.count = 0
-                if tmp > 0:
-                    self.rev_started = True
-                if tmp == 3:
-                    self._direction = -1
-                    self.c_zz = zz
-                    return self._direction
+        if self._direction >= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['highs']:
+            for idx_zz in range(idx, idx-5, -2):
+                if self.compact.iloc[idx_zz]['zz'] < self.compact.iloc[idx_zz-2]['zz']:
+                    self.count += 1
 
-            if self._direction <= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['lows']:
-                for idx_zz in range(idx, idx-5, -2):
-                    if self.compact.iloc[idx_zz]['zz'] > self.compact.iloc[idx_zz-2]['zz']:
-                        self.count += 1
-                tmp = self.count
-                self.count = 0
-                if tmp > 0:
-                    self.rev_started = True
-                if tmp == 3:
-                    self._direction = 1
-                    self.c_zz = zz
-                    return self._direction
-        else:
-            if self._direction >= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['highs']:
-                for idx_zz in range(idx, idx-5, -2):
-                    if self.compact.iloc[idx_zz]['zz'] < self.compact.iloc[idx_zz-2]['zz']:
-                        self.count += 1
-                    else:
-                        break
-                tmp = self.count
-                self.count = 0
-                if tmp >= 2:
-                    self._direction = -1
-                    self.c_zz = zz
-                    self.rev_started = False
-                    return self._direction
+            tmp = self.count
+            self.count = 0
 
-            if self._direction <= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['lows']:
-                for idx_zz in range(idx, idx-5, -2):
-                    if self.compact.iloc[idx_zz]['zz'] > self.compact.iloc[idx_zz-2]['zz']:
-                        self.count += 1
-                    else:
-                        break
-                tmp = self.count
-                self.count = 0
-                if tmp >= 2:
-                    self._direction = 1
-                    self.c_zz = zz
-                    self.rev_started = False
-                    return self._direction
+            if tmp == 3:
+                self._direction = -1
+                self.c_zz = zz
+                return self._direction
+
+        if self._direction <= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['lows']:
+            for idx_zz in range(idx, idx-5, -2):
+                if self.compact.iloc[idx_zz]['zz'] > self.compact.iloc[idx_zz-2]['zz']:
+                    self.count += 1
+
+            tmp = self.count
+            self.count = 0
+
+            if tmp == 3:
+                self._direction = 1
+                self.c_zz = zz
+                return self._direction
 
         return self._direction
-
-        # self.compact.iloc[]['zz']
