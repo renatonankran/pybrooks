@@ -6,6 +6,7 @@ from lib.FindLegStart import FindLegStart
 from lib.FindLegEnd import FindLegEnd
 from lib.ABCFailure import ABCFailure
 from lib.TrendDirection import TrendDirection
+from lib.KamaGoldenCross import KamaGoldenCross
 from lib.bars import gap
 from lib.AbstractLegs import AbstractLegs
 from lib.FeaturesExtractors.BarCountage import BarCountage
@@ -22,11 +23,12 @@ from lib.FeaturesExtractors.LegPriceSize import LegPriceSize
 # columns = ['time', 'open', 'high', 'low', 'close', 'zz', 'highs', 'lows']
 # data = data.loc[:, columns]
 
-data = pd.read_csv("..\Datasets\AUDCADm_M5_novembro_with_zz.csv")
-columns = ['time', 'open', 'high', 'low', 'close', 'zz', 'highs', 'lows']
-# parsed_df = data.loc[(data['time'] >= '2021-03-22 09:00:00')
-#                      & (data['time'] <= '2021-03-22 19:00:00')]
-data = data.loc[:, columns]
+data = pd.read_csv("../Datasets/EURUSDm_M30_2021-2022.csv")
+datam5 = pd.read_csv("../Datasets/EURUSDm_M5_2021_2022.csv")
+columns = ['time', 'open', 'high', 'low', 'close']
+# data = data.loc[(data['time'] >= '2021-12-01 00:00:00')
+#                 & (data['time'] <= '2021-12-31 00:00:00'), columns]
+# data.reset_index(inplace=True, drop=True)
 # parsed_df.reset_index(inplace=True, drop=True)
 
 
@@ -59,18 +61,23 @@ data = data.assign(zz=zz, lows=lows, highs=highs, start=start)
 
 # print(data.head(30))
 
+# kgc = KamaGoldenCross()
+# gcross, kama50, kama200 = kgc.run(data)
+# data = data.assign(direction=gcross, kama50=kama50, kama200=kama200)
+
 td = TrendDirection(data)
 td_df = td.run()
+# td_df = pd.DataFrame(td_df.tolist(), columns=['direction_idx', 'dir_color'])
 print(td_df.tail(40))
 
 # abcf = ABCFailure()
 # entries, SL, TP = abcf.run(data)
 # data = data.assign(entries=entries, SL=SL, TP=TP)
 
-fig = go.Figure(data=[go.Candlestick(x=data['time'], open=data['open'],
-                high=data['high'],
-                low=data['low'],
-                close=data['close'])])
+fig = go.Figure(data=[go.Candlestick(x=datam5['time'], open=datam5['open'],
+                high=datam5['high'],
+                low=datam5['low'],
+                close=datam5['close'])])
 
 fig.add_trace(go.Scatter(
     x=data.loc[(data['zz'].notnull())]['time'],
@@ -78,9 +85,14 @@ fig.add_trace(go.Scatter(
 ))
 
 # fig.add_trace(go.Scatter(
-#     x=td_df.loc[(td_df['direction_idx'].notnull())]['time'],
-#     y=td_df.loc[(td_df['direction_idx'].notnull())]['direction_idx']
+#     x=data['time'],
+#     y=data['kama50']
 # ))
+# fig.add_trace(go.Scatter(
+#     x=data['time'],
+#     y=data['kama200']
+# ))
+
 
 # fig.add_trace(go.Scatter(
 #     x=data.loc[(data['entries'].notnull())]['time'],
@@ -101,6 +113,7 @@ fig.add_trace(go.Scatter(
 #     mode="markers",
 #     marker=dict(color="blue")
 # ))
+
 for idx, item in td_df.loc[(td_df['dir_color'].notnull())].iterrows():
     if item['dir_color'] == 1:
         fig.add_vrect(
@@ -108,7 +121,7 @@ for idx, item in td_df.loc[(td_df['dir_color'].notnull())].iterrows():
             fillcolor="LightSalmon", opacity=0.4,
             layer="below", line_width=0,
         )
-    else:
+    if item['dir_color'] == -1:
         fig.add_vrect(
             x0=item['direction_idx'][0], x1=item['direction_idx'][1],
             fillcolor="LightGreen", opacity=0.4,

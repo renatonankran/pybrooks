@@ -4,17 +4,18 @@ import pandas as pd
 
 class TrendDirection():
 
-    def __init__(self, _data) -> None:
-        self.compact = _data.loc[_data['zz'].notnull()]
-        self.compact.reset_index(inplace=True, drop=False)
-        self.compact = self.compact.loc[:, [
-            'index', 'zz', 'time', 'highs', 'lows']]
-        # print(self.compact.head(30))
+    def __init__(self, _data=None) -> None:
+        if _data is not None:
+            self.compact = _data.loc[_data['zz'].notnull()]
+            self.compact.reset_index(inplace=True, drop=False)
+            self.compact = self.compact.loc[:, [
+                'index', 'zz', 'time', 'highs', 'lows']]
+            # print(self.compact.head(30))
         self.c_zz = None
         self.mem = None
         self._direction = 0
         self.plot_dir = 0.0
-        self.date_start = self.compact.iloc[0]['time']
+        self.date_start = None
         self.count = 0
         self.rev_started = False
         self.lower_low = None
@@ -27,23 +28,24 @@ class TrendDirection():
         for idx, item in self.compact.iterrows():
             direction[idx] = self.direction(item['index'])
         self.compact = self.compact.assign(direction=direction)
-        tmp = self.prepare_to_plot()
+        tmp = self.prepare_to_plot(self.compact)
         tmp = pd.DataFrame(tmp.tolist(), columns=[
                            'direction_idx', 'dir_color'])
         self.compact = self.compact.assign(
             direction_idx=tmp['direction_idx'], dir_color=tmp['dir_color'])
         return self.compact
 
-    def prepare_to_plot(self):
-        return self.compact.apply(lambda row: self.direction_index2(row), axis=1)
+    def prepare_to_plot(self, _data):
+        self.date_start = _data.iloc[0]['time']
+        return _data.apply(lambda row: self.direction_index(row), axis=1)
+
+    # def direction_index(self, row):
+    #     if self.plot_dir != row['direction']:
+    #         self.plot_dir = row['direction']
+    #         return row['zz'], self.plot_dir
+    #     return np.nan, np.nan
 
     def direction_index(self, row):
-        if self.plot_dir != row['direction']:
-            self.plot_dir = row['direction']
-            return row['zz'], self.plot_dir
-        return np.nan, np.nan
-
-    def direction_index2(self, row):
         if self.plot_dir != row['direction']:
             self.plot_dir = row['direction']
             tmp = self.date_start
