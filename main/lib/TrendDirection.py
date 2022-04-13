@@ -17,6 +17,9 @@ class TrendDirection():
         self.date_start = self.compact.iloc[0]['time']
         self.count = 0
         self.rev_started = False
+        self.lower_low = None
+        self.higher_high = None
+        self.extr_count = 0
 
     def run(self):
 
@@ -50,35 +53,83 @@ class TrendDirection():
 
     def direction(self, zz):
         idx = self.compact[self.compact['index'] == zz].index.item()
-        if idx < 6:
-            return 0
+        self.extr_count += 1
+
+        if self.extr_count < 8:
+            if self.extr_count > 2:
+                pass
+            # if self._direction >= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['highs']:
+            return self._direction
         if self.c_zz == zz:
             return self._direction
 
         if self._direction >= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['highs']:
+            high_flag = False
+
+            if self.higher_high == None:
+                self.higher_high = self.compact.iloc[idx]['zz']
+            if self.compact.iloc[idx]['zz'] >= self.higher_high:
+                self.higher_high = self.compact.iloc[idx]['zz']
+
             for idx_zz in range(idx, idx-5, -2):
+                if self.higher_high == self.compact.iloc[idx_zz-2]['zz'] or self.higher_high == self.compact.iloc[idx_zz]['zz']:
+                    high_flag = True
                 if self.compact.iloc[idx_zz]['zz'] < self.compact.iloc[idx_zz-2]['zz']:
                     self.count += 1
+                else:
+                    break
 
             tmp = self.count
             self.count = 0
+            # if tmp >= 2:
+            #     print(self.higher_high,
+            #           self.compact.iloc[idx]['time'], high_flag)
 
-            if tmp == 3:
+            if high_flag and tmp == 3:
                 self._direction = -1
                 self.c_zz = zz
+                high_flag = False
+                self.higher_high = None
+                self.extr_count = 0
+                return self._direction
+            elif not high_flag and tmp >= 2:
+                self._direction = -1
+                self.c_zz = zz
+                self.higher_high = None
+                self.extr_count = 0
                 return self._direction
 
         if self._direction <= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['lows']:
+            low_flag = False
+
+            if self.lower_low == None:
+                self.lower_low = self.compact.iloc[idx]['zz']
+            if self.compact.iloc[idx]['zz'] <= self.lower_low:
+                self.lower_low = self.compact.iloc[idx]['zz']
+
             for idx_zz in range(idx, idx-5, -2):
+                if self.lower_low == self.compact.iloc[idx_zz-2]['zz'] or self.lower_low == self.compact.iloc[idx_zz]['zz']:
+                    low_flag = True
                 if self.compact.iloc[idx_zz]['zz'] > self.compact.iloc[idx_zz-2]['zz']:
                     self.count += 1
+                else:
+                    break
 
             tmp = self.count
             self.count = 0
 
-            if tmp == 3:
+            if low_flag and tmp == 3:
                 self._direction = 1
                 self.c_zz = zz
+                low_flag = False
+                self.lower_low = None
+                self.extr_count = 0
+                return self._direction
+            elif not low_flag and tmp >= 2:
+                self._direction = 1
+                self.c_zz = zz
+                self.lower_low = None
+                self.extr_count = 0
                 return self._direction
 
         return self._direction
