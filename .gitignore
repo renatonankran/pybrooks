@@ -4,5 +4,6 @@ __pycache__/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Datasets
+# Folders
 Datasets/
+img/
