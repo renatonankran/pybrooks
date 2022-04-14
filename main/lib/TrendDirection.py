@@ -39,12 +39,6 @@ class TrendDirection():
         self.date_start = _data.iloc[0]['time']
         return _data.apply(lambda row: self.direction_index(row), axis=1)
 
-    # def direction_index(self, row):
-    #     if self.plot_dir != row['direction']:
-    #         self.plot_dir = row['direction']
-    #         return row['zz'], self.plot_dir
-    #     return np.nan, np.nan
-
     def direction_index(self, row):
         if self.plot_dir != row['direction']:
             self.plot_dir = row['direction']
@@ -60,7 +54,6 @@ class TrendDirection():
         if self.extr_count < 8:
             if self.extr_count > 2:
                 pass
-            # if self._direction >= 0 and self.compact.iloc[idx]['zz'] == self.compact.iloc[idx]['highs']:
             return self._direction
         if self.c_zz == zz:
             return self._direction
