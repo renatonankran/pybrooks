@@ -59,11 +59,11 @@ def zig_zag(data, depth):
                     if zz[last] == highs[last]:
                         if zz[last] >= zz[idx]:
                             zz[idx] = np.nan
-                            start[idx] = np.nan
+                            highs[idx] = np.nan
                             break
                         else:
                             zz[last] = np.nan
-                            start[idx] = np.nan
+                            highs[last] = np.nan
                             break
 
         if not np.isnan(lows[idx]):
@@ -76,11 +76,11 @@ def zig_zag(data, depth):
                     if zz[last] == lows[last]:
                         if zz[last] <= zz[idx]:
                             zz[idx] = np.nan
-                            start[idx] = np.nan
+                            lows[idx] = np.nan
                             break
                         else:
                             zz[last] = np.nan
-                            start[idx] = np.nan
+                            lows[last] = np.nan
                             break
 
     return zz, lows, highs, start
