@@ -1,21 +1,20 @@
-import datetime
-import csv
+from os import listdir
+from os.path import isfile, join
+from pprint import pprint
 import backtrader as bt
 import pandas as pd
 import numpy as np
-from lib.zigzag import zig_zag
 from lib.LineBreakoutFailure import LineBreakoutFailure
+from lib.zigzag import zig_zag
+
 
 columns = ['time', 'open', 'high', 'low', 'close']
 data = pd.read_csv("../Datasets/AUDCADm_M5_2021_2022.csv")
 # data = data.loc[(data['time'] <= '2022-01-01 00:05:00'), columns]
-# data = data.loc[(data['time'] >= '2022-01-01 00:00:00')
-#                 & (data['time'] <= '2022-01-10 00:05:00'), columns]
-# data.reset_index(inplace=True, drop=True)
+data = data.loc[(data['time'] >= '2022-01-01 00:00:00')
+                & (data['time'] <= '2022-01-10 00:05:00'), columns]
+data.reset_index(inplace=True, drop=True)
 # data.set_index('datetime', inplace=True, drop=False)
-
-# zz, lows, highs, start = zig_zag(data, 12)
-# data = data.assign(zz=zz, lows=lows, highs=highs, start=start)
 
 df = zig_zag(data, 6)
 data = pd.concat([data, df], axis=1)
@@ -28,6 +27,38 @@ nn = data.loc[data['entries'].notnull()]
 print(nn.head(40))
 data.rename(columns={"time": "datetime"}, inplace=True)
 data.index = pd.to_datetime(data['datetime'])
+
+mypath = "../Datasets/b3/proceced"
+
+
+def run():
+    for item in listdir(mypath):
+        if isfile(join(mypath, item)):
+            if item == 'B3SA3_M5_2017_2022.csv':
+                data = pd.read_csv(join(mypath, item))
+                for zz_size in [4, 6, 10, 12]:
+                    columns = ['time', 'open', 'high', 'low', 'close', 'zz' +
+                               str(zz_size), 'highs'+str(zz_size), 'lows'+str(zz_size), 'start'+str(zz_size)]
+                    parsed = data.loc[:, columns]
+                    rename_cols = {'zz'+str(zz_size): 'zz',
+                                   'highs'+str(zz_size): 'highs',
+                                   'lows'+str(zz_size): 'lows',
+                                   'start'+str(zz_size): 'start'}
+                    parsed.rename(columns=rename_cols, inplace=True)
+
+                    lbf = LineBreakoutFailure(parsed)
+                    lbf.run()
+                    prep = lbf.prepare_backtrader()
+                    for idx in range(2):
+                        parsed = parsed.assign(entries=prep[idx])
+                        parsed.rename(
+                            columns={"time": "datetime"}, inplace=True)
+                        parsed.index = pd.to_datetime(parsed['datetime'])
+                        nn = parsed.loc[parsed['entries'].notnull()]
+                        print(nn.head(20))
+
+
+# run()
 
 
 class PandasData(bt.feeds.PandasData):
@@ -111,7 +142,7 @@ class strat(bt.Strategy):
         # Simply log the closing price of the series from the reference
         # self.log('Time, {}'.format(self.entries[0]))
         if not np.isnan(self.entries[0]):
-            brackets = self.buy_bracket(limitprice=self.dataclose+self.entries+self.entries*0.5,
+            brackets = self.buy_bracket(limitprice=self.dataclose+self.entries,
                                         price=self.dataclose,
                                         stopprice=(self.dataclose-self.entries))
 
@@ -120,14 +151,24 @@ cerebro = bt.Cerebro(stdstats=False)
 cerebro.adddata(data)
 cerebro.addstrategy(strat)
 cerebro.addobserver(bt.observers.BuySell, barplot=True, bardist=0.0)
+cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='ta')
 cerebro.addsizer(bt.sizers.SizerFix, stake=1)
 cerebro.broker.setcash(100000000.0)
 
 print('Starting Portfolio Value: %.5f' % cerebro.broker.getvalue())
 
-cerebro.run()
-
-print('Final Portfolio Value: %.5f' % cerebro.broker.getvalue())
+thestrats = cerebro.run()
+thestrat = thestrats[0]
+ta = thestrat.analyzers.ta.get_analysis()
+pprint('total trades:         %.1f' % ta['total']['total'])
+pprint('pnl net total:        %.5f' % ta['pnl']['net']['total'])
+pprint('pnl net average:      %.5f' % ta['pnl']['net']['average'])
+pprint('win trades:           %.5f' % ta['won']['total'])
+pprint('win total:            %.5f' % ta['won']['pnl']['total'])
+pprint('win average:          %.5f' % ta['won']['pnl']['average'])
+pprint('loss trades:          %.5f' % ta['lost']['total'])
+pprint('loss total:           %.5f' % ta['lost']['pnl']['total'])
+pprint('loss average:         %.5f' % ta['lost']['pnl']['average'])
 
 # cerebro.plot(volume=False, style='candlestick')
 
