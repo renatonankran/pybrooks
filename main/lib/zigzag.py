@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 def zig_zag(data, depth):
@@ -83,7 +84,20 @@ def zig_zag(data, depth):
                             lows[last] = np.nan
                             break
 
-    return zz, lows, highs, start
+    df = pd.DataFrame()
+    df = df.assign(zz=zz, lows=lows, highs=highs, start=start)
+
+    zz = df.loc[df['zz'].notnull()]
+    zz.reset_index(inplace=True, drop=False)
+    for idx in zz.index-1:
+        start = df.loc[zz.iloc[idx]['index']+1:zz.iloc[idx+1]['index']]
+        start = start[start['start'].notnull()]
+        start.reset_index(inplace=True, drop=False)
+        if start.shape[0] > 1:
+            for start_idx in range(1, start.shape[0]):
+                df.iloc[int(start.iloc[start_idx]['index'])]['start'] = np.nan
+
+    return df
 
 
 def zz_direction(row):

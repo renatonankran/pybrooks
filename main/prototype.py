@@ -11,38 +11,50 @@ from lib import LineSide
 
 
 # data = pd.read_csv("../Datasets/EURUSDm_M30_2021-2022.csv")
-data = pd.read_csv("../Datasets/AUDCADm_M5_2021_2022_mt5.csv")
+data = pd.read_csv("../Datasets/AUDCADm_M5_2021_2022.csv")
 columns = ['time', 'open', 'high', 'low', 'close']
-data = data.loc[(data['time'] >= '2022-01-01 00:00:00')
-                & (data['time'] <= '2022-01-10 00:05:00'), columns]
+data = data.loc[(data['time'] >= '2022-01-11 00:00:00')
+                & (data['time'] <= '2022-01-25 00:05:00'), columns]
 data.reset_index(inplace=True, drop=True)
 
 # print(data.tail(40))
 
-zz, lows, highs, start = zig_zag(data, 12)
-data = data.assign(zz=zz, lows=lows, highs=highs, start=start)
+df = zig_zag(data, 12)
+data = pd.concat([data, df], axis=1)
+# data = data.assign(zz=zz, lows=lows, highs=highs, start=start)
 
-# print(data.loc[data['zz'].notnull()].head(30))
+print(data.loc[data['zz'].notnull()].head(30))
 
 lbf = LineBreakoutFailure(data)
-lbf.run()
-prep = lbf.prepare_backtrader()
-# x=data['time'],
-fig = go.Figure(data=[go.Candlestick(open=data['open'],
-                high=data['high'],
-                low=data['low'],
-                close=data['close'])])
+lbf.plot_entries(b3=False)
 
-fig.add_trace(go.Scatter(
-    x=data.loc[(data['zz'].notnull())].index,
-    y=data.loc[(data['zz'].notnull())]['zz']
-))
-fig.add_trace(go.Scatter(
-    x=data.loc[(data['start'].notnull())].index,
-    y=data.loc[(data['start'].notnull())]['start'],
-    mode="markers",
-    marker=dict(color="black")
-))
+# lbf.run()
+# prep = lbf.prepare_backtrader()
+# data = data.assign(with_pb_entry=prep[1], with_pb_exit=prep[2])
+# wpb = data.loc[data['with_pb_exit'].notnull()]
+# print(wpb.head(40))
+# x=data['time'],
+# fig = go.Figure(data=[go.Candlestick(x=data['time'], open=data['open'],
+#                 high=data['high'],
+#                 low=data['low'],
+#                 close=data['close'])])
+
+# fig.add_trace(go.Scatter(
+#     x=data.loc[(data['zz'].notnull())]['time'],
+#     y=data.loc[(data['zz'].notnull())]['zz']
+# ))
+# fig.add_trace(go.Scatter(
+#     x=data.loc[(data['start'].notnull())]['time'],
+#     y=data.loc[(data['start'].notnull())]['start'],
+#     mode="markers",
+#     marker=dict(color="black")
+# ))
+# fig.add_trace(go.Scatter(
+#     x=data.loc[(data['with_pb_exit'].notnull())]['time'],
+#     y=data.loc[(data['with_pb_exit'].notnull())]['with_pb_exit'],
+#     mode="markers",
+#     marker=dict(color="red")
+# ))
 
 
 # fig.add_trace(go.Scatter(
@@ -82,6 +94,7 @@ fig.add_trace(go.Scatter(
 #         dict(bounds=["sat", "mon"]),  # hide weekends
 #     ]
 # )
-# fig.update_layout(xaxis_rangeslider_visible=False)
+# fig.update_layout(xaxis_rangeslider_visible=False,
+#                   title_text="AUDCADm_M5_2021_2022")
 
 # fig.show()
